@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, String, Enum Text
+from sqlalchemy import ForeignKey, String, Enum, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 from datetime import datetime
@@ -21,9 +21,9 @@ class Job(Base):
     title: Mapped[str] = mapped_column(nullable=False)
     location: Mapped[str] = mapped_column(nullable=True)
     status: Mapped[str] = mapped_column(
-        Enum("applied", "interview", "offer", "rejected"),
-        name="job_status",
-        nullable=False,
+        Enum("applied", "interview", "offer", "rejected",
+        name="job_status"),
+        nullable=False
     )
     url: Mapped[str] = mapped_column(nullable=True)
     salary_range: Mapped[str] = mapped_column(nullable=True)
