@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 import app.models
-
+import app.schemas
 app = FastAPI()
 
 
