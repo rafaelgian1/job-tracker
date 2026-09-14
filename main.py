@@ -2,7 +2,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import app.models
 import app.schemas
+import app.auth.jwt_handler
 app = FastAPI()
+
 
 
 class Item(BaseModel):

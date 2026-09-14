@@ -1,9 +1,11 @@
-from sqlalchemy import ForeignKey, String, Enum
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import ARRAY
-from app.core.database import Base
 from datetime import datetime
 from typing import TYPE_CHECKING
+
+from sqlalchemy import Enum, ForeignKey, String
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.core.database import Base
 
 if TYPE_CHECKING:
     from app.models.job import Job
