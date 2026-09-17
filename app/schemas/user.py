@@ -1,4 +1,8 @@
+import datetime as dt
+from typing import Annotated
+
 from pydantic import (
+    AfterValidator,
     BaseModel,
     ConfigDict,
     EmailStr,
@@ -6,11 +10,23 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-import datetime as dt
+
+from app.auth.utils import is_password_valid
+
+
+def validate_password_length(password: str) -> str:
+    if not is_password_valid(password):
+        raise ValueError(
+            "Password must be between 8 and 72 bytes in length when encoded in UTF-8."
+        )
+    return password
+
+
+valid_byte_length = Annotated[str, AfterValidator(validate_password_length)]
 
 
 class UserCreate(BaseModel):
-    password: str = Field(..., min_length=8)
+    password: valid_byte_length
     email: EmailStr  # Validate email format
 
 
@@ -23,6 +39,9 @@ class UserResponse(BaseModel):
 
 
 class UserPatch(BaseModel):
+    current_password: valid_byte_length | None = Field(default=None)
+    new_password: valid_byte_length | None = Field(default=None)
+
     @model_validator(mode="before")
     def check_passwords(cls, values):
         current_password = values.get("current_password")
@@ -34,11 +53,6 @@ class UserPatch(BaseModel):
                 "Both current_password and new_password must be provided together."
             )
         return values
-
-    current_password: str | None = Field(min_length=8, default=None)
-    new_password: str | None = Field(
-        min_length=8, default=None
-    )  # Validate that both current_password and new_password are provided together
 
     @field_validator("email", mode="before")
     def clean_email(cls, v):
