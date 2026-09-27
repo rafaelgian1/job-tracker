@@ -28,5 +28,5 @@ def create_access_token(
 
 
 def decode_token(token: str) -> dict[str, Any]:
-    payoad = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-    return payoad
+    payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+    return payload

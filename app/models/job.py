@@ -1,12 +1,14 @@
-from sqlalchemy import ForeignKey, Enum, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.core.database import Base
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from sqlalchemy import Enum, ForeignKey, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.core.database import Base
+
 if TYPE_CHECKING:
-    from app.models.user import User
     from app.models.job_analysis import JobAnalysis
+    from app.models.user import User
 
 
 class Job(Base):
