@@ -1,6 +1,7 @@
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 import datetime as dt
 from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 
 class JobCreate(BaseModel):

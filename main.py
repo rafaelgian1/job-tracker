@@ -1,14 +1,18 @@
 from contextlib import asynccontextmanager
+from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.auth.jwt_handler import create_access_token
 from app.auth.utils import get_password_hash, verify_password
+from app.core.config import settings
 from app.core.database import Base, engine, get_session
 from app.models.user import User
+from app.schemas.token import Token
 from app.schemas.user import UserCreate, UserResponse
 
 
@@ -49,6 +53,22 @@ def read_user(user_id: int, session: Annotated[Session, Depends(get_session)]):
     if not user:
         raise HTTPException(status_code=404, detail="User not found!")
     return user
+
+
+@router.post("/login", response_model=Token, status_code=200)
+def login_user(
+    user: Annotated[OAuth2PasswordRequestForm, Depends()],
+    session: Annotated[Session, Depends(get_session)],
+):
+
+    db_user = session.query(User).filter(User.email == user.username).first()
+    if db_user is None or not verify_password(user.password, db_user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid email or password!")
+    access_token = create_access_token(
+        str(db_user.id),
+        db_user.email,
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 app.include_router(router)
