@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     secret_key: str
     algorithm: str
     access_token_expire_minutes: int
+    
 settings = Settings()
 #pydantic will automatically read the values from the .env file
 #and populate the attributes of the Settings class based on the variable names 

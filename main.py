@@ -7,6 +7,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.auth.jwt_bearer import get_current_user_id
 from app.auth.jwt_handler import create_access_token
 from app.auth.utils import get_password_hash, verify_password
 from app.core.config import settings
@@ -26,12 +27,16 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 router = APIRouter()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-
-@router.get("/token/")
-async def read_items(token: Annotated[str, Depends(oauth2_scheme)]):
-    return {"token": token}
+@router.get("/users/me/", response_model=UserResponse)
+def read_current_user(
+    current_user_id: Annotated[int, Depends(get_current_user_id)],
+    session: Annotated[Session, Depends(get_session)],
+):
+    user = session.get(User, current_user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found!")
+    return user
 
 
 @router.post("/register/", response_model=UserResponse, status_code=201)
