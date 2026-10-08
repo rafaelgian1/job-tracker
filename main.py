@@ -1,5 +1,4 @@
 from contextlib import asynccontextmanager
-from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
@@ -9,10 +8,18 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.auth.jwt_bearer import get_current_user_id
-from app.auth.jwt_handler import create_access_token, create_refresh_token, decode_token
-from app.auth.token_store import is_refresh_token_active, store_refresh_token
+from app.auth.jwt_handler import (
+    REFRESH,
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+)
+from app.auth.token_store import (
+    is_refresh_token_active,
+    revoke_refresh_token,
+    store_refresh_token,
+)
 from app.auth.utils import get_password_hash, verify_password
-from app.core.config import settings
 from app.core.database import Base, engine, get_session
 from app.models.user import User
 from app.schemas.refresh_token import RefreshToken
@@ -88,7 +95,7 @@ def refresh_token(
         payload = decode_token(refresh.refresh_token)
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
-    if payload.get("type") != "refresh":
+    if payload.get("type") != REFRESH:
         raise HTTPException(status_code=401, detail="Invalid token type")
     jti = payload.get("jti")
     if not is_refresh_token_active(jti):
@@ -105,6 +112,22 @@ def refresh_token(
     )
 
     return {"access_token": new_access_token, "token_type": "bearer"}
+
+
+@router.post("/logout", status_code=204)
+def logout_user(
+    refresh: RefreshToken,
+):
+    try:
+        payload = decode_token(refresh.refresh_token)
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    if payload.get("type") != REFRESH:
+        raise HTTPException(status_code=401, detail="Invalid token type")
+    jti = payload.get("jti")
+    if not is_refresh_token_active(jti):
+        raise HTTPException(status_code=401, detail="Refresh token is not active")
+    revoke_refresh_token(jti)
 
 
 app.include_router(router)
