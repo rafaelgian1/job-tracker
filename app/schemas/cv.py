@@ -11,5 +11,4 @@ class CVResponse(BaseModel):
     extracted_skills: list[
         str
     ]  # The list of skills extracted from the CV, if no skills were extracted, this will be an empty list
-    status: Literal["pending", "processed", "failed"]
-    # The status of the CV processing"
+    

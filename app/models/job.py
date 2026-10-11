@@ -27,6 +27,7 @@ class Job(Base):
         name="job_status"),
         nullable=False
     )
+    description: Mapped[str] = mapped_column(Text, nullable=True)
     url: Mapped[str] = mapped_column(nullable=True)
     salary_range: Mapped[str] = mapped_column(nullable=True)
     notes: Mapped[str] = mapped_column(Text, nullable=True)
