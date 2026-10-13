@@ -4,7 +4,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.auth.jwt_bearer import get_current_user_id
@@ -47,43 +46,6 @@ def read_current_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found!")
     return user
-
-
-@router.post("/register/", response_model=UserResponse, status_code=201)
-def create_user(user: UserCreate, session: Annotated[Session, Depends(get_session)]):
-    db_user = User(email=user.email, hashed_password=get_password_hash(user.password))
-    session.add(db_user)
-    try:
-        session.commit()
-    except IntegrityError:
-        session.rollback()
-        raise HTTPException(status_code=409, detail="Email already registered")
-    session.refresh(db_user)
-    return db_user
-
-
-@router.post("/login", response_model=Tokens, status_code=200)
-def login_user(
-    user: Annotated[OAuth2PasswordRequestForm, Depends()],
-    session: Annotated[Session, Depends(get_session)],
-):
-    db_user = session.query(User).filter(User.email == user.username).first()
-    if db_user is None or not verify_password(user.password, db_user.hashed_password):
-        raise HTTPException(status_code=401, detail="Invalid email or password!")
-
-    access_token = create_access_token(
-        str(db_user.id),
-        db_user.email,
-    )
-    refresh_token, jti = create_refresh_token(
-        str(db_user.id),
-    )
-    store_refresh_token(jti, db_user.id)
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer",
-    }
 
 
 @router.post("/refresh/token", response_model=Tokens, status_code=200)
