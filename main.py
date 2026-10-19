@@ -1,29 +1,12 @@
 from contextlib import asynccontextmanager
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
-from jose import JWTError
-from sqlalchemy.orm import Session
+from fastapi import FastAPI
 
-from app.auth.jwt_bearer import get_current_user_id
-from app.auth.jwt_handler import (
-    REFRESH,
-    create_access_token,
-    create_refresh_token,
-    decode_token,
-)
-from app.auth.token_store import (
-    is_refresh_token_active,
-    revoke_refresh_token,
-    store_refresh_token,
-)
-from app.auth.utils import get_password_hash, verify_password
-from app.core.database import Base, engine, get_session
-from app.models.user import User
-from app.schemas.refresh_token import RefreshToken
-from app.schemas.tokens import Tokens
-from app.schemas.user import UserCreate, UserResponse
+from app.api.auth import router as auth_router
+from app.api.users import router as users_router
+from app.core.database import Base, engine
+from app.core.exceptions import handle_exceptions
+from app.services.auth import AuthError
 
 
 @asynccontextmanager  # because FastAPI's lifespan function is an async context manager, we can use the @asynccontextmanager decorator to define a function that will be called when the application starts and stops.
@@ -34,62 +17,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-router = APIRouter()
 
 
-@router.get("/users/me/", response_model=UserResponse)
-def read_current_user(
-    current_user_id: Annotated[int, Depends(get_current_user_id)],
-    session: Annotated[Session, Depends(get_session)],
-):
-    user = session.get(User, current_user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found!")
-    return user
-
-
-@router.post("/refresh/token", response_model=Tokens, status_code=200)
-def refresh_token(
-    refresh: RefreshToken,
-    session: Annotated[Session, Depends(get_session)],
-):
-    try:
-        payload = decode_token(refresh.refresh_token)
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    if payload.get("type") != REFRESH:
-        raise HTTPException(status_code=401, detail="Invalid token type")
-    jti = payload.get("jti")
-    if not is_refresh_token_active(jti):
-        raise HTTPException(status_code=401, detail="Refresh token is not active")
-    current_user_id = payload.get("sub")
-    if not current_user_id:
-        raise HTTPException(status_code=401, detail="Invalid token payload")
-    user = session.get(User, int(current_user_id))
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    new_access_token = create_access_token(
-        str(current_user_id),
-        str(user.email),
-    )
-
-    return {"access_token": new_access_token, "token_type": "bearer"}
-
-
-@router.post("/logout", status_code=204)
-def logout_user(
-    refresh: RefreshToken,
-):
-    try:
-        payload = decode_token(refresh.refresh_token)
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    if payload.get("type") != REFRESH:
-        raise HTTPException(status_code=401, detail="Invalid token type")
-    jti = payload.get("jti")
-    if not is_refresh_token_active(jti):
-        raise HTTPException(status_code=401, detail="Refresh token is not active")
-    revoke_refresh_token(jti)
-
-
-app.include_router(router)
+app.include_router(auth_router)
+app.include_router(users_router)
+app.add_exception_handler(AuthError, handle_exceptions)
