@@ -5,8 +5,7 @@ from fastapi import FastAPI
 from app.api.auth import router as auth_router
 from app.api.users import router as users_router
 from app.core.database import Base, engine
-from app.core.exceptions import handle_exceptions
-from app.services.auth import AuthError
+from app.core.exceptions import AuthError, handle_exceptions
 
 
 @asynccontextmanager  # because FastAPI's lifespan function is an async context manager, we can use the @asynccontextmanager decorator to define a function that will be called when the application starts and stops.

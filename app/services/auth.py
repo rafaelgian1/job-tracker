@@ -7,9 +7,12 @@ from app.auth.jwt_handler import (
     create_access_token,
     create_refresh_token,
     decode_token,
-    is_refresh_token_active,
 )
-from app.auth.token_store import revoke_refresh_token, store_refresh_token
+from app.auth.token_store import (
+    is_refresh_token_active,
+    revoke_refresh_token,
+    store_refresh_token,
+)
 from app.auth.utils import get_password_hash, verify_password
 from app.core.exceptions import AuthError
 from app.models.user import User
