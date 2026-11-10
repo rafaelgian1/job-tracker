@@ -1,9 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session
 
-from app.core.config import Settings
-
-settings = Settings()
+from app.core.config import settings
 
 # access the seetings atributes from config.py using the settings object
 # and pass them using f-string to the create_engine function to create a connection to the PostgreSQL database.
