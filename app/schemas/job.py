@@ -1,7 +1,10 @@
 import datetime as dt
-from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
+
+from app.models.job import status
+
+status_values = [s for s in status.enums]
 
 
 class JobCreate(BaseModel):
@@ -9,9 +12,9 @@ class JobCreate(BaseModel):
     company: str = Field(..., min_length=1, max_length=100)
     title: str = Field(..., min_length=1, max_length=200)
     location: str | None = Field(default=None, max_length=100)
-    status: Literal["applied", "interview", "offer", "rejected"] = Field(
-        default="applied"
-    )
+    status: str = Field(
+        default="applied", pattern=f"^({'|'.join(status_values)})$"
+    )  # for the regex pattern to recognize the exact status values
     url: HttpUrl | None = Field(default=None)
     salary_range: str | None = Field(default=None, max_length=50)
     notes: str | None = Field(default=None, max_length=1000)
@@ -25,7 +28,9 @@ class JobResponse(BaseModel):
     company: str
     title: str
     location: str | None
-    status: Literal["applied", "interview", "offer", "rejected"]
+    status: str = Field(
+        pattern=f"^({'|'.join(status_values)})$"
+    )  # for the regex pattern to recognize the exact status values
     url: HttpUrl | None
     salary_range: str | None
     notes: str | None
@@ -38,9 +43,9 @@ class JobPatch(BaseModel):
     company: str | None = Field(default=None, min_length=1, max_length=100)
     title: str | None = Field(default=None, min_length=1, max_length=200)
     location: str | None = Field(default=None, max_length=100)
-    status: Literal["applied", "interview", "offer", "rejected"] | None = Field(
-        default=None
-    )
+    status: str | None = Field(
+        default=None, pattern=f"^({'|'.join(status_values)})$"
+    )  # for the regex pattern to recognize the exact status values
     url: HttpUrl | None = Field(default=None)
     salary_range: str | None = Field(default=None, max_length=50)
     notes: str | None = Field(default=None, max_length=1000)
