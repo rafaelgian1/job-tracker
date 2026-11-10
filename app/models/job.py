@@ -10,6 +10,14 @@ if TYPE_CHECKING:
     from app.models.job_analysis import JobAnalysis
     from app.models.user import User
 
+status = Enum(
+    "applied",
+    "interview",
+    "offer",
+    "rejected",
+    name="job_status",
+)
+
 
 class Job(Base):
     __tablename__ = "jobs"
@@ -22,11 +30,7 @@ class Job(Base):
     company: Mapped[str] = mapped_column(nullable=False)
     title: Mapped[str] = mapped_column(nullable=False)
     location: Mapped[str] = mapped_column(nullable=True)
-    status: Mapped[str] = mapped_column(
-        Enum("applied", "interview", "offer", "rejected",
-        name="job_status"),
-        nullable=False
-    )
+    status: Mapped[str] = mapped_column(status, default="applied", nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
     url: Mapped[str] = mapped_column(nullable=True)
     salary_range: Mapped[str] = mapped_column(nullable=True)
