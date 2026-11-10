@@ -1,6 +1,7 @@
-from pydantic import BaseModel, ConfigDict, Field
 import datetime as dt
 from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class JobAnalysisResponse(BaseModel):
@@ -13,4 +14,4 @@ class JobAnalysisResponse(BaseModel):
     )  # Ensure match_score is between 0 and 100
     analyzed_at: dt.datetime | None
     job_id: int
-    analysis_status: Literal["pending", "completed", "failed"]
+    analysis_status: Literal["completed", "failed"]
